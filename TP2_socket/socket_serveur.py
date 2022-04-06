@@ -1,9 +1,14 @@
 # Importation de la librairy pour les sockets
 import socket
+import os
+
 
 # Attribution du mode datagrame, de l'adresse IP et du numéro de port au socket :
 sock_Serveur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 sock_Serveur.bind(("127.0.0.1", 22222))
+
+
+
 
 # Réception du message de synchronisation et des coordonnées du client :
 while True:
@@ -25,23 +30,40 @@ while True:
            break
 
 
+
+
+lngEntete = 3
+#lngDatagramme=10
+fichier = "01234567890123456789"
+fichierIdx = 0
+
 while True:
      print("On peut envoyer le datagramme au client !")
 
+      # Grosseur fichier en octet:
+      # Chemin p/r au dossier Python direct
+     nom_fichier = "Mario.png"
+     fichierSize = os.path.getsize(nom_fichier)
+     print(fichierSize)
+     
      # Ouverture du fichier txt pour lecture :
-     
-     nom_fichier_txt = "Bla.txt"
-     
-     fichiertxt = open(nom_fichier_txt, 'r')
-     
-     fichiertxt.read()
+      # Grosseur fichier en octet:
+      # Chemin p/r au dossier Python direct
+      #C
+      #fichiertxt = open(nom_fichier_txt, 'r')
+      #fichiertxt.read()
+      #fichiertxt.close()
 
+
+     fichiertxt = open(nom_fichier, 'rb')
+     temp = fichiertxt.read(1000)
+     sock_Serveur.send(str.encode(temp, encoding="utf-8"))
+     
      fichiertxt.close()
 
 
 
-
-
+     #sock_Serveur.send(str.encode(fichier, encoding="utf-8"))
 
      sock_Serveur.shutdown(socket.SHUT_RDWR) 
      sock_Serveur.close()
