@@ -1,5 +1,6 @@
 # Importation de la librairy pour les sockets
 import socket
+from turtle import clear
 longueurEntete = 10
 
 # Attribution du mode datagrame, de l'adresse IP et du numéro de port au socket :
@@ -14,43 +15,45 @@ try:
     sock_Client.connect(("127.0.0.1", 22222))
     msg_syn = "Hello Serveur"
     sock_Client.send(str.encode(msg_syn, encoding="utf-8"))
-    print("1er message de synchronisation envoyé au serveur")
+    print("1er message de synchronisation envoyé au serveur \n")
 except:
-    print("Erreur pas de connexion au serveur possible")
+    print("Erreur pas de connexion au serveur possible \n")
     exit()
 
 
 
 
 while True:
-     msg_ack, address = sock_Client.recvfrom(4096)
+    msg_ack, address = sock_Client.recvfrom(4096)
 
-     if msg_ack:
-       msg_ack = msg_ack.decode(encoding='utf-8') 
+    if msg_ack:
+        msg_ack = msg_ack.decode(encoding='utf-8') 
 
-       if msg_ack == "Hello Client":
-          print(f"Message synchronisation 2 : {msg_ack} de {address}")
+        if msg_ack == "Hello Client":
+            print(f"Message synchronisation 2 : {msg_ack} de {address} \n")
 
-          msg_syn = "Connexion"
-          sock_Client.send(str.encode(msg_syn, encoding="utf-8"))
-          break
+            msg_syn = "Connexion"
+            sock_Client.send(str.encode(msg_syn, encoding="utf-8"))
+            break
 
 
 
 
 while True:
 
-     fichier, address = sock_Client.recvfrom(1000)
-     fichier = fichier.decode(encoding='utf-8') 
-     print(fichier)
+    fichier, address = sock_Client.recvfrom(2000)
+    #fichier = fichier.decode(encoding='utf-8') 
+    print(fichier)
+    print("\n")
 
     #  if fichier:
     #    fichier = fichier.decode() 
     #    print(fichier)
 
-     sock_Client.shutdown(socket.SHUT_RDWR) 
-     sock_Client.close()
-     break
+    if fichier == '{{END}}':
+        sock_Client.shutdown(socket.SHUT_RDWR) 
+        sock_Client.close()     
+        break
 
 
 
