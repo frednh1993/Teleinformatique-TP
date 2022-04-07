@@ -51,5 +51,6 @@ for i in range(0,3):
          print("fin")
 
 
-
+data = b'salut'
+print(data[1:3])
       

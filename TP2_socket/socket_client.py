@@ -1,6 +1,7 @@
 # Importation de la librairy pour les sockets
 import socket
-from turtle import clear
+import os
+#from turtle import clear
 longueurEntete = 10
 
 # Attribution du mode datagrame, de l'adresse IP et du numéro de port au socket :
@@ -39,24 +40,27 @@ while True:
 
 
 
+fichier = open("Copie_fichier", "wb")
 while True:
 
-    fichier, address = sock_Client.recvfrom(2000)
+    data, address = sock_Client.recvfrom(1050)
+    #print(data)
+
     #fichier = fichier.decode(encoding='utf-8') 
-    print(fichier)
-    print("\n")
+    #fichier = open("Copie_fichier", 'w')
+    fichier.write(data)
 
-    #  if fichier:
-    #    fichier = fichier.decode() 
-    #    print(fichier)
+    if data == b'-END-':
+        print("Encore la fin")
 
-    if fichier == '{{END}}':
         sock_Client.shutdown(socket.SHUT_RDWR) 
-        sock_Client.close()     
+        sock_Client.close() 
+        fichier.close()    
         break
 
 
-
+if fichier:
+    os.remove("Copie_fichier")
 
 
 
