@@ -32,38 +32,45 @@ while True:
 
 
 
-lngEntete = 3
-#lngDatagramme=10
-fichier = "01234567890123456789"
-fichierIdx = 0
-
 while True:
      print("On peut envoyer le datagramme au client !")
 
-      # Grosseur fichier en octet:
-      # Chemin p/r au dossier Python direct
+     header = 12
+     nbrDgm = 1
+     oct_init = 0
+
+      # Sélectionner le fichier à transmettre + obtenir sa taille :
      nom_fichier = "Mario.png"
      fichierSize = os.path.getsize(nom_fichier)
+     totDgm = (fichierSize/1000)
      print(fichierSize)
      
-     # Ouverture du fichier txt pour lecture :
-      # Grosseur fichier en octet:
-      # Chemin p/r au dossier Python direct
-      #C
-      #fichiertxt = open(nom_fichier_txt, 'r')
-      #fichiertxt.read()
-      #fichiertxt.close()
+     # Ouverture du fichier pour lecture et transmission les datagrammes :
+     fichier = open(nom_fichier, 'rb')
+     fichiertotal = fichier.read()
 
 
-     fichiertxt = open(nom_fichier, 'rb')
-     temp = fichiertxt.read(1000)
-     sock_Serveur.send(str.encode(temp, encoding="utf-8"))
-     
-     fichiertxt.close()
+     while nbrDgm < totDgm:
+      datagramme = fichier[oct_init:(nbrDgm*1000)]
+      datagramme = f'{{ND}}{nbrDgm}{{TD}}{totDgm}:<20' + datagramme
+
+
+      oct_init = (nbrDgm*1000)+1
+      nbrDgm = nbrDgm + 1
 
 
 
-     #sock_Serveur.send(str.encode(fichier, encoding="utf-8"))
+
+
+
+      sock_Serveur.send(str.encode(datagramme, encoding="utf-8"))
+
+      
+
+
+
+
+      fichier.close()
 
      sock_Serveur.shutdown(socket.SHUT_RDWR) 
      sock_Serveur.close()

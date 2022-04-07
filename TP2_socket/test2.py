@@ -4,12 +4,25 @@ nom_fichier = "Mario.png"
 fichierSize = os.path.getsize(nom_fichier)
 print(fichierSize)
 
-lngDatagramme = 100
 
+fichier = open(nom_fichier, 'rb')
 
-fichiertxt = open(nom_fichier, 'rb')
-temp = fichiertxt.read(1024)
-
+temp = fichier.read(100)
 print(temp)
-fichiertxt.close()
+
+nbrDgm = 50
+totDgm = 250
+
+temp2 = temp[0:10]
+datagramme = f'{{ND}}{nbrDgm}{{TD}}{totDgm}'
+
+print(type(datagramme))
+
+bytes(datagramme, "utf-8")
+
+
+
+print(datagramme)
+
+fichier.close()
 
