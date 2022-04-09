@@ -61,8 +61,9 @@ fichierTot = fichier.read()
 while nbrDgm <= totDgm:
    datagramme = fichierTot[oct_init:(nbrDgm*1000)]
 
-   header = f'{{S.HEADER}}{{TD}}{nbrDgm}{{TD}}{totDgm}{{E.HEADER}}'
-   header = header = bytes(header, "utf-8")
+   header = f'{{S.HEADER}}{{ND}}{nbrDgm}{{TD}}{totDgm}{{E.HEADER}}'
+   header = header.encode()
+  
     
    #datagramme = header + datagramme
    datagramme = b''.join([header, datagramme])
