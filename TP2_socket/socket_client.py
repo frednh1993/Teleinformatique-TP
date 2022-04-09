@@ -41,9 +41,20 @@ while True:
 
 
 fichier = open("Copie_fichier", "wb")
+HeaderNumbers = []
+ 
 while True:
 
-    data, address = sock_Client.recvfrom(1050)
+    data, address = sock_Client.recvfrom(1036)
+
+    #for i in range(0,len(data)):
+        
+
+
+
+
+
+
     #print(data)
 
     #fichier = fichier.decode(encoding='utf-8') 
@@ -59,8 +70,8 @@ while True:
         break
 
 
-if fichier:
-    os.remove("Copie_fichier")
+# if fichier:
+#     os.remove("Copie_fichier")
 
 
 
