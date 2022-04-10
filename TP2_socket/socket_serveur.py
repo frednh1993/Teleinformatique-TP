@@ -6,6 +6,8 @@ import os
 sock_Serveur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 sock_Serveur.bind(("127.0.0.1", 22222))
 
+#sock_Serveur.listen(5)
+
 
 
 
@@ -39,7 +41,7 @@ oct_init = 0
 fin = b'-END-'
 
 # Sélectionner le fichier à transmettre + obtenir sa taille :
-nom_fichier = "Mario.png"
+nom_fichier = "Lorem.txt"
 
 fichierSize = os.path.getsize(nom_fichier)
 #print(fichierSize)
@@ -56,31 +58,51 @@ totDgm = int(totDgm)
 fichier = open(nom_fichier, 'rb')
 fichierTot = fichier.read()
 
-
+sock_Serveur.send(str.encode(nom_fichier, encoding="utf-8"))
 # Boucle qui envoit un datagramme tant que tout le fichier n'est pas transmis en totalité (toutes les tranches de 1000 oct de données) :
-while nbrDgm <= totDgm:
+while nbrDgm <= totDgm+1:
+
    datagramme = fichierTot[oct_init:(nbrDgm*1000)]
 
    header = f'{{S.HEADER}}{{ND}}{nbrDgm}{{TD}}{totDgm}{{E.HEADER}}'
    header = header.encode()
-  
-    
+
+   
    #datagramme = header + datagramme
    datagramme = b''.join([header, datagramme])
    #print(type(datagramme))
 
-   # Incrémentation de l'oct_init et du nombre de datagramme (prochain datagramme à transmettre) :
-   oct_init = (nbrDgm*1000)+1
-   nbrDgm = (nbrDgm + 1)
+     
+   #oct_init = (nbrDgm*1000)+1
+   #nbrDgm = (nbrDgm + 1)
+
 
    # Transmission du datagramme :
    sock_Serveur.send(datagramme)
 
-   if nbrDgm == totDgm:
+   msg, address = sock_Serveur.recvfrom(4096)
+
+   if nbrDgm == totDgm+1:
       sock_Serveur.send(fin)
       print("Fin de transmission")
 
+   #msg_syn, address = sock_Serveur.recvfrom(4096)
 
+   if msg:
+      msg = int(msg)
+
+
+   if msg == nbrDgm:
+      # Incrémentation de l'oct_init et du nombre de datagramme (prochain datagramme à transmettre) :
+      oct_init = (nbrDgm*1000)+1
+      nbrDgm = (nbrDgm + 1)
+   else:
+      sock_Serveur.settimeout(3)
+      if msg == nbrDgm:
+         oct_init = (nbrDgm*1000)+1
+         nbrDgm = (nbrDgm + 1)
+   
+   
 
 
 # Fermeture du fichier et du socket serveur :

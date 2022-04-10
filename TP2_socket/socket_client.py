@@ -40,9 +40,11 @@ while True:
 
 
 
-fichier = open("Copie_fichier", "wb")
-HeaderNumbers = []
+fichier = open("Copie_fichier.txt", "wb")
+#HeaderNumbers = []
 checksum = ""
+nomFichierCopie, address = sock_Client.recvfrom(1036)
+nomFichierCopie = nomFichierCopie.decode(encoding='utf-8') 
  
 while True:
 
@@ -73,6 +75,10 @@ while True:
     début = substring.find(f"{{ND}}") + len(f"{{ND}}")
     fin = substring.find(f"{{TD}}") 
     substring = substring[début:fin]
+
+    # Client envoit le numéro du datagramme lu au serveur comme confirmation :
+    sock_Client.send(substring.encode())
+
     checksum += substring + ";"
 
     # Écriture de chaque segement de données des datagrammes reçus dans la variable fichier
@@ -80,8 +86,10 @@ while True:
 
 
 print(checksum)
-# if fichier:
-#     os.remove("Copie_fichier")
+print(nomFichierCopie)
+
+
+
 
 
 
