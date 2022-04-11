@@ -39,7 +39,7 @@ while True:
 
 
 
-fichier = open("Copie_fichier.txt", "wb")
+fichier = open("Copie_fichier.png", "wb")
 checksum = ""
 
 nom_fichier_copie, address = sock_Client.recvfrom(1100)

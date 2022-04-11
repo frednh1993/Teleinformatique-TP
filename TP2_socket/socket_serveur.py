@@ -1,6 +1,8 @@
-# Importation des librairies pour les sockets et les fichiers
+# Importation des librairies pour les sockets, les fichiers et le random (aléatoire)
 import socket
 import os
+import random
+import math
 
 # Attribution du mode UDP, de l'adresse IP et du numéro de port du socket Serveur :
 sock_Serveur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
@@ -39,13 +41,12 @@ oct_init = 0
 fin = b'-END-'
 
 # Sélectionner le fichier à transmettre et obtenir sa taille :
-nom_fichier = "Lorem.txt"
+nom_fichier = "Mario.png"
 fichierSize = os.path.getsize(nom_fichier)
 #print(fichierSize)
 
 # Nombre total de datagrammes à transmettre
-totDgm = round((fichierSize/1000),0)
-totDgm = int(totDgm)
+totDgm = int(math.ceil((fichierSize/1000)))
    
 # Ouverture en lecture binaire de la totalité du fichier à transmettre :
 fichier = open(nom_fichier, 'rb')
@@ -54,8 +55,8 @@ fichierTot = fichier.read()
 # Envoit au Client du nom du fichier que l'on transmet : 
 sock_Serveur.send(str.encode(nom_fichier, encoding="utf-8"))
 
-# Boucle qui envoit un datagramme tant que tout le fichier n'est pas transmis en totalité (par tranche de 1000 oct. max de données) :
-while nbrDgm <= totDgm+1:
+# Boucle qui envoit un datagramme tant que tout le fichier n'est pas transmis en totalité (par tranche de 1000 oct. max de données) : (+1 ligne 60)
+while nbrDgm <= totDgm:  
 
    datagramme = fichierTot[oct_init:(nbrDgm*1000)]
 
@@ -66,14 +67,20 @@ while nbrDgm <= totDgm+1:
    datagramme = b''.join([header, datagramme])
    #print(type(datagramme))
 
-   # Transmission du datagramme :
-   sock_Serveur.send(datagramme)
+   # Afin de 
+   fiabilite_reseau = random.randint(0,100)
 
+   if fiabilite_reseau != 20 and fiabilite_reseau != 40 and fiabilite_reseau != 60 and fiabilite_reseau != 80 and fiabilite_reseau != 100:
+      # Transmission du datagramme :
+      sock_Serveur.send(datagramme)
+   else:
+      sock_Serveur.send(b"")
+           
    # Le client envoit une confirmation (confirmation_dgm) de chaque datagramme reçu :
    confirmation_dgm, address = sock_Serveur.recvfrom(4096)
 
-   # Condition : Si le nombre de datagramme envoyé = totalité du fichier à transmettre = message de fin
-   if nbrDgm == totDgm+1:
+   # Condition : Si le nombre de datagramme envoyé = totalité du fichier à transmettre = message de fin (+1 ligne 84)
+   if nbrDgm == totDgm:
       sock_Serveur.send(fin)
       print("Fin de transmission")
 
