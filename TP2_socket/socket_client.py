@@ -1,13 +1,11 @@
-# Importation de la librairy pour les sockets
+# Importation des librairies pour les sockets et les fichiers
 import socket
 import os
-#from turtle import clear
-longueurEntete = 10
+# longueurEntete = 10
 
-# Attribution du mode datagrame, de l'adresse IP et du numéro de port au socket :
+# Attribution du mode UDP, de l'adresse IP et du numéro de port du socket Client :
 sock_Client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock_Client.bind(("127.0.0.1", 5653))
-
 
 
 
@@ -16,40 +14,41 @@ try:
     sock_Client.connect(("127.0.0.1", 22222))
     msg_syn = "Hello Serveur"
     sock_Client.send(str.encode(msg_syn, encoding="utf-8"))
-    print("1er message de synchronisation envoyé au serveur \n")
+    print("Client : Message de synchronisation envoyé au Serveur. \n")
 except:
-    print("Erreur pas de connexion au serveur possible \n")
+    print("Erreur : Pas de connexion au Serveur possible ! \n")
     exit()
 
 
 
-
+# Client va écouter le message d'acquittement du Serveur (dans msg_ack) : 
 while True:
     msg_ack, address = sock_Client.recvfrom(4096)
 
     if msg_ack:
         msg_ack = msg_ack.decode(encoding='utf-8') 
 
+        # Si le Client reçoit le bon message d'acquittement, il va envoyer le message final qui confirme la connexion (Three-way handshake) : 
         if msg_ack == "Hello Client":
-            print(f"Message synchronisation 2 : {msg_ack} de {address} \n")
+            print(f"Client : Message d'acquittement {msg_ack} reçu du Serveur {address}. \n")
 
-            msg_syn = "Connexion"
-            sock_Client.send(str.encode(msg_syn, encoding="utf-8"))
+            msg_con = "Connexion"
+            sock_Client.send(str.encode(msg_con, encoding="utf-8"))
+            print("Client : Message de confirmation de connexion envoyé au Serveur. \n")
             break
 
 
 
-
 fichier = open("Copie_fichier.txt", "wb")
-#HeaderNumbers = []
 checksum = ""
-nomFichierCopie, address = sock_Client.recvfrom(1036)
-nomFichierCopie = nomFichierCopie.decode(encoding='utf-8') 
+
+nom_fichier_copie, address = sock_Client.recvfrom(1100)
+nom_fichier_copie = nom_fichier_copie.decode(encoding='utf-8') 
  
 while True:
 
     # Réception dans la variable data de chaque d'atagramme transmis par le serveur (data = Header + datagramme)
-    data, address = sock_Client.recvfrom(1036)
+    data, address = sock_Client.recvfrom(1100)
 
     # Suite à la réception du dernier datagramme de données, le serveur envoit le segment -END- au client qui va mettre fin à la transcription du fichier de copie
     if data == b'-END-':
@@ -86,7 +85,7 @@ while True:
 
 
 print(checksum)
-print(nomFichierCopie)
+print(f"Client : Le fichier {nom_fichier_copie} a été copié côté Client.")
 
 
 
