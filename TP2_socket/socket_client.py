@@ -101,7 +101,7 @@ while True:
 #print(checksum)
 
 # Si la taille du fichier copier = taille du fichier Serveur = bonne transmission de données.
-# Petite ERREUR : nous avons toujour une taille de fichier copier légèrement inférieur au fichier Serveur !?
+# Petite ERREUR : nous avons toujour une taille de fichier copiée légèrement inférieur au fichier Serveur !?
 if taille_fichier_Serveur == os.path.getsize(f"Copie_{nom_fichier_Serveur}"):
     print(f"Client : Le fichier {nom_fichier_Serveur} a été copié côté Client sans Erreur.")
 
