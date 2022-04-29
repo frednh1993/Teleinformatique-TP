@@ -1,18 +1,20 @@
-# INSTRUCTION : Entrez le nom du fichier à transmettre à la ligne 45 : nom_fichier = "". Votre fichier doit se trouver à l'intérieur du document TP2_socket
+# Explication : Ceci est le socket Serveur qui va effectuer une connexion avec un socket Client et qui va copier et transmettre un fichier quelconque au Client.
+# INSTRUCTION : Entrez le nom du fichier à transmettre à la ligne 45 : nom_fichier = "". Votre fichier doit se trouver à l'intérieur du document TP2_socket.
 
-# Importation des librairies pour les sockets, les options de fichier, le random (aléatoire) ainsi que les fonctions mathématiques.
+
+
+# Importation des librairies.
 import socket
 import os
 import random
 import math
-
 # Attribution du mode UDP, de l'adresse IP et du numéro de port du socket Serveur.
 sock_Serveur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 sock_Serveur.bind(("127.0.0.1", 22222))
 
 
 
-# Réception du message de synchronisation du Client, connexion du Serveur au Client, envoit du message d'acquittement au Client et confirmation de connexion.
+# Processus de connexion Three-Way Handshake.
 while True:
    msg_syn, address = sock_Serveur.recvfrom(1100)
 
@@ -34,85 +36,74 @@ while True:
 
 
 
-# nbrDgm : Nombre de datagrammes envoyés, 
-# oct_init : Représente le début du curseur pour la transmission des datagrammes (ex : Datagramme1 oct_init=0; Datagramme2 oct_init=1001; ...),
-# fin : Code de fin de transmission du fichier envoyé au Client une fois tout le fichier transmis.
+# nbrDgm := nombre de datagrammes envoyés, 
+# fin := code de fin de transmission du fichier.
 nbrDgm = 1
-oct_init = 0
 fin = b'-END-'
 
-# Sélectionne le fichier à transmettre et obtient sa taille.
+# Sélectionne le fichier à transmettre et obtient sa taille. (Inscrire le nom de votre fichier à la ligne suivante)
 nom_fichier = "Mario.png"
 fichierSize = os.path.getsize(nom_fichier)
-#print(fichierSize)
-# info_fichier renseigne le Client sur le nom du fichier transmis avec sa taille.
+
+# info_fichier renseigne le Client sur le nom du fichier transmis + sa taille.
 info_fichier = nom_fichier + f" {fichierSize}"
-
-# totDgm : Nombre total de datagrammes à transmettre.
+# totDgm := Nombre total de datagrammes à transmettre.
 totDgm = int(math.ceil((fichierSize/1000)))
-   
-# Ouverture en lecture binaire de la totalité du fichier à transmettre.
+# Ouverture fichier à transmettre.
 fichier = open(nom_fichier, 'rb')
-fichierTot = fichier.read()
-
-# Envoit au Client du nom du fichier que l'on transmet.
+# Envoit info_fichier au Client. 
 sock_Serveur.send(str.encode(info_fichier, encoding="utf-8"))
 
 
 
-# Boucle qui envoit un datagramme de données tant que tout le fichier n'est pas transmis (par tranche de 1000 oct. de données max).
+# Boucle d'envoi des datagrammes.
 while nbrDgm <= totDgm:  
 
-   if nbrDgm != totDgm:
-      datagramme = fichierTot[oct_init:(nbrDgm*1000)]
-   else:
-      datagramme = fichierTot[oct_init:fichierSize]
-
+   #if nbrDgm <= totDgm:
+   datagramme = fichier.read(1000) 
+              
+   # header := entête d'un datagramme.           
    header = f'{{S.HEADER}}{{ND}}{nbrDgm}{{TD}}{totDgm}{{E.HEADER}}'
    header = header.encode()
 
-   # datagramme envoyé = header(entête indiquant le datagramme transmis par son numéro d'ordre ET le nombre total de datagrammes à transmettre) + datagramme 1000 oct. max de données.
+   # datagramme envoyé = header( # datagramme & nombre total de datagrammes à transmettre) + données (1000 oct.).
    datagramme = b''.join([header, datagramme])
 
-   # Afin de simuler des erreurs d'envoi de datagramme, on utilise la fonction random 0-100 et 5 valeurs qui font envoyer un message vide (donc aucun message).
+   # Simulation des erreurs d'envoi de datagramme avec la fonction random qui envoit un message vide 5% du temps.
    fiabilite_reseau = random.randint(0,100)
-
    if fiabilite_reseau != 20 and fiabilite_reseau != 40 and fiabilite_reseau != 60 and fiabilite_reseau != 80 and fiabilite_reseau != 100:
       # Transmission du datagramme.
       sock_Serveur.send(datagramme)
    else:
       sock_Serveur.send(b'')
-           
-   # Le client envoit une confirmation (confirmation_dgm) de chaque datagramme reçu.
+
+   # confirmation_dgm := confirmation de datagramme reçu.
    confirmation_dgm, address = sock_Serveur.recvfrom(1100)
 
-   # Condition : Si le nombre de datagramme envoyé = totalité des datagrammes du fichier à transmettre, on envoit le message de fin de transmission.
+   # Message de fin de transmission.
    if nbrDgm == totDgm:
       sock_Serveur.send(fin)
       print("Serveur : Fin de transmission")
-
-   # Si le Serveur reçoit confirmation_dgm, il va le caster en int.
+   # Si le Serveur reçoit confirmation_dgm, il va le caster en int (compatibilité).
    if confirmation_dgm:
       confirmation_dgm = int(confirmation_dgm)
 
-   # Si on a la confirmation Client de la réception du datagramme, il va y avoir incrémentation de oct_init et nbrDgm afin de transmettre le prochain datagramme dans la file.
-   if confirmation_dgm == nbrDgm:
-      oct_init = (nbrDgm*1000)+1
-      nbrDgm = (nbrDgm + 1)
-   else:
-      # S'il n'y a pas de confirmation du Client, le timer de 3 sec est amorcé et la confirmation client est vérifiée de nouveau.
+   # Protocole d'envoi du même datagramme en cas de non réception de confirmation.
+   while confirmation_dgm != nbrDgm:
+      sock_Serveur.send(datagramme)
+      confirmation_dgm, address = sock_Serveur.recvfrom(1100)
       sock_Serveur.settimeout(3)
-      if confirmation_dgm == nbrDgm:
-         oct_init = (nbrDgm*1000)+1
-         nbrDgm = (nbrDgm + 1)
-# Si aucune confirmation Client n'est reçue (même suite au timer de 3 sec), la boucle va recommancer sans incrémenter vers le prochain datagramme (va donc renvoyer le même datagramme) 
+
+      if confirmation_dgm:
+         confirmation_dgm = int(confirmation_dgm)
+   
+   #print(f"{nbrDgm}")
+   # Incrémentation des datagrammes.
+   nbrDgm = (nbrDgm + 1)
 
 
 
-
-
-
-# Fermeture du fichier et du socket Serveur :
+# Fermeture du fichier et du socket Serveur.
 fichier.close()
 sock_Serveur.shutdown(socket.SHUT_RDWR) 
 sock_Serveur.close()

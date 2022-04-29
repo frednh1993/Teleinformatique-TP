@@ -1,9 +1,10 @@
-# Importation des librairies pour les sockets, les options de fichier et pour la fonction split (via re)
+# Explication : Ceci est le socket Client qui va effectuer une connexion avec un socket Serveur et qui va recevoir une copie d'un fichier quelconque (réception d'information).
+
+# Importation des librairies.
 import socket
 import os
 import re
-
-# Attribution du mode UDP, de l'adresse IP et du numéro de port du socket Client :
+# Attribution du mode UDP, de l'adresse IP et du numéro de port du socket Client.
 sock_Client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock_Client.bind(("127.0.0.1", 5653))
 
@@ -19,16 +20,14 @@ except:
     print("Erreur : Pas de connexion au Serveur possible ! \n")
     exit()
 
-
-
-# Le Client va écouter le message d'acquittement du Serveur (msg_ack) : 
+# Le Client va écouter le message d'acquittement du Serveur (msg_ack). 
 while True:
     msg_ack, address = sock_Client.recvfrom(1100)
 
     if msg_ack:
         msg_ack = msg_ack.decode(encoding='utf-8') 
 
-        # Si le Client reçoit le bon message d'acquittement, il va envoyer le message final (via msg_con) qui confirme la connexion (Three-way handshake) : 
+        # Si le Client reçoit le bon message d'acquittement, il va envoyer le message final (via msg_con) qui confirme la connexion.
         if msg_ack == "Hello Client":
             print(f"Client : Message d'acquittement {msg_ack} reçu du Serveur {address}. \n")
 
@@ -39,28 +38,28 @@ while True:
 
 
 
-# 1100 oct. de réception pour avoir une sécurité avec l'entête qui est attachée aux données.
+# info_fichier_Serveur := nom du fichier copié + sa taille.
 info_fichier_Serveur, address = sock_Client.recvfrom(1100)
 info_fichier_Serveur = info_fichier_Serveur.decode(encoding='utf-8')
-#
+# Permet de séparer l'information.
 info_fichier_Serveur = info_fichier_Serveur.split(' ')
 nom_fichier_Serveur = info_fichier_Serveur[0]
 taille_fichier_Serveur = info_fichier_Serveur[1]
 
-#print(nom_fichier_Serveur)
-#print(taille_fichier_Serveur)
-
-# Ouverture du fichier de copie en écriture binaire.
+# Ouverture d'un fichier pour recevoir les données.
 fichier = open(f"Copie_{nom_fichier_Serveur}", "wb")
-# checksum : variable qui donne l'ordre des datagrammes pour la vérification de similarité du fichier transmis.
+# checksum := contient tous les datagrammes reçus et leur ordre.
 checksum = ""
  
+
+# Boucle de réception et d'écriture des données du fichier à copier.
 while True:
 
-    # Réception, dans la variable data, de chaque datagramme transmis par le Serveur (data = Header + datagramme de données)
+    # data = Header + datagramme de données.
+    # 1100 oct. de réception pour avoir une sécurité avec l'entête qui est attachée aux données.
     data, address = sock_Client.recvfrom(1100)
 
-    # Suite à la réception du dernier datagramme de données, le Serveur envoit le segment -END- au client pour mettre fin à la transcription du fichier de copie.
+    # Fin de la transcription du fichier de copie.
     if data == b'-END-':
         # Fermeture du socket Client et du fichier en cours.
         sock_Client.shutdown(socket.SHUT_RDWR) 
@@ -68,20 +67,17 @@ while True:
         fichier.close()    
         break
 
-    # Si data est null, il n'y aura pas de Header.
+    # Sécurité : data doit avoir un contenu pour entrer ici.
     if data is not None:
-        # Variable substring qui va contenir l'entête du datagramme. 
+        # substring := va contenir l'entête du datagramme. 
         start = data.find(b'{S.HEADER}') 
         end = data.find(b'{E.HEADER}') + len(b'{E.HEADER}')
         substring = data[start:end]
 
-        # Retrait de l'entête des données de data.
+        # data conserve uniquement les données.
         data = data.replace(substring, b'')
 
-        # Stockage de lentête dans la variable (str) substring. 
         substring = substring.decode()
-        
-        # Pour la vérification de transmission de chaque datagramme, on stocke seulement le numéro de chaque datagramme reçu dans la variable checksum.
         début = substring.find(f"{{ND}}") + len(f"{{ND}}")
         fin = substring.find(f"{{TD}}") 
         substring = substring[début:fin]
@@ -91,23 +87,29 @@ while True:
 
         checksum += substring + ";"
 
-        # Écriture de chaque segement de données reçus (datagramme de données) dans la variable fichier.
+        # Écriture de chaque segement de données reçus (datagramme de données) dans fichier.
         fichier.write(data)
-    
 
-# Taille du fichier copier.
+
+
+taille_fichier_Serveur = int(taille_fichier_Serveur)
+taille_fichier_Client = os.path.getsize(f"Copie_{nom_fichier_Serveur}")
+
+# Si la taille du fichier copié == taille du fichier original = bonne transmission de données.
+if taille_fichier_Serveur == taille_fichier_Client:
+    print(f"Client : Le fichier {nom_fichier_Serveur} a été copié sans erreur et se nomme Copie_{nom_fichier_Serveur}.")
+else:
+    print(f"Client : Le fichier {nom_fichier_Serveur} présente des erreurs de copie.")
+
+
+
+# Information de validation (moi) :
+
+#print('Taille du fichier copié : ', end='')
 #print(os.path.getsize(f"Copie_{nom_fichier_Serveur}"))
-# Pour voir l'ordre des datagrammes reçus.
+
+#print('Datagrammes reçus : ', end='')
 #print(checksum)
-
-# Si la taille du fichier copier = taille du fichier Serveur = bonne transmission de données.
-# Petite ERREUR : nous avons toujour une taille de fichier copiée légèrement inférieur au fichier Serveur !?
-if taille_fichier_Serveur == os.path.getsize(f"Copie_{nom_fichier_Serveur}"):
-    print(f"Client : Le fichier {nom_fichier_Serveur} a été copié côté Client sans Erreur.")
-
-print(f"Client : Le fichier {nom_fichier_Serveur} a été copié côté Client.")
-
-
 
 
 
